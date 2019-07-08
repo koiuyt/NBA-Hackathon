@@ -1,0 +1,52 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+import matplotlib.pyplot as plt
+
+
+nba_dataset = pd.read_csv(r'C:\Users\Chen\Downloads\training_set.csv', encoding='ISO-8859-1')
+
+nba_dataset['Date'] = nba_dataset.apply(lambda row: row.Created[:10],axis=1)
+
+nba_dataset['Date'] = pd.to_datetime(nba_dataset['Date'])
+
+nba_dataset['Weekday'] = nba_dataset['Date'].dt.day_name()
+
+nba_dataset['Hour'] = nba_dataset.apply(lambda row: row.Created[11:13],axis=1)
+
+dictOfWeek = {i: nba_dataset['Weekday'].unique()[i] for i in range(0, len(nba_dataset['Weekday'].unique()))}
+inv_dict = {a: b for b, a in dictOfWeek.items()}
+print(inv_dict)
+nba_dataset['Weekday Number'] = nba_dataset['Weekday'].map(inv_dict)
+
+dictType = {i: nba_dataset['Type'].unique()[i] for i in range(0, len(nba_dataset['Type'].unique()))}
+inv_Type = {a: b for b, a in dictType.items()}
+print(inv_dict)
+nba_dataset['Type Number'] = nba_dataset['Type'].map(inv_Type)
+
+def countat(x):
+    return x.count('@')
+
+
+nba_dataset ['Description'] = nba_dataset['Description'].apply(str)
+nba_dataset['Mentions'] = nba_dataset['Description'].apply(countat)
+
+nba_dataset['Length'] = nba_dataset['Description'].apply(lambda x: len(x))
+
+nba_dataset['Percentage Engagement'] = nba_dataset['Engagements'] / nba_dataset['Followers at Posting']
+
+x = nba_dataset[['Followers at Posting', 'Weekday Number', 'Hour', 'Type Number', 'Mentions', 'Length']]
+y = nba_dataset[['Percentage Engagement']]
+
+X_train, X_test, y_train, y_test = train_test_split(x,y,test_size=.3)
+
+lm = LinearRegression()
+
+lm.fit(X_train,y_train)
+
+predictions = lm.predict(X_test)
+
+plt.scatter(y_test,predictions)
+plt.xlabel = 'Y Test'
+plt.ylabel = 'Predicted Y'
+plt.show()
